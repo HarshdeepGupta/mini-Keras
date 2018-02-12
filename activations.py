@@ -30,6 +30,12 @@ def softmax(x, deriv = False):
         expos = np.exp(x - np.max(x))
         return expos/np.sum(expos, axis = 1, keepdims=True)
 
+def linear(x, deriv = False):
+    if deriv:
+        return np.ones(x.shape)
+    else:
+        return x
+
 def activation(x, type = 'sigmoid', deriv = False):
     if type == 'sigmoid':
         return sigmoid(x, deriv)
@@ -37,6 +43,8 @@ def activation(x, type = 'sigmoid', deriv = False):
         return relu(x,deriv)
     elif type == 'softmax':
         return softmax(x, deriv)
+    elif type == 'linear' :
+        return linear(x,deriv)
     else :
         raise ValueError("Not a valid activation function")
 
