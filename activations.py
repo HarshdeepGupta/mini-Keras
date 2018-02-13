@@ -11,15 +11,9 @@ def sigmoid(x, deriv = False):
 def relu(x, deriv = False, leak = 0.1):
     '''Calculates the relu activaiton function for a numpy array like input, or its derivative'''
     if deriv:
-        if x >= 0:
-            return 1
-        else:
-            return -leak
+        return (x>0)*1
     else:
-        if x >= 0:
-            return x
-        else :
-            return leak*x
+        return (x>0)*x
 
 
 def softmax(x, deriv = False):
@@ -27,7 +21,8 @@ def softmax(x, deriv = False):
         # TODO
         return Null
     else:
-        expos = np.exp(x - np.max(x))
+        maxx = np.max(x,axis = 1,keepdims=True)
+        expos = np.exp(x - maxx)
         return expos/np.sum(expos, axis = 1, keepdims=True)
 
 def linear(x, deriv = False):
@@ -49,11 +44,16 @@ def activation(x, type = 'sigmoid', deriv = False):
         raise ValueError("Not a valid activation function")
 
 def main():
-    x = np.array([[1,2,3,-1]])
-    W = np.array([[1,2,3],[2,4,5],[2,3,4],[3,4,5]])
-    print(x.shape)
-    print(sigmoid(np.dot(x,W)))
-    print(softmax(np.dot(x,W)))
+    # x = np.array([[1,2,3,-1]])
+    # W = np.array([[1,2,3],[2,4,5],[2,3,4],[3,4,5]])
+    # print(x.shape)
+    # print(sigmoid(np.dot(x,W)))
+    # print(softmax(np.dot(x,W)))
+
+    x = np.array([[1,2,-3,8,9]])
+    print(relu(x, deriv = True))
+
+
 
 if __name__ == '__main__':
     main()
