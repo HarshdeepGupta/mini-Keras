@@ -1,12 +1,14 @@
 import numpy as np
+from sklearn.metrics import log_loss
 
 def cross_entropy_loss(y_pred, y_target, deriv = False):
     '''y_target is a one hot encoded vector, y_pred is the output from softmax layer'''
+    
     if deriv:
         # assume that the last layer was softmax activated, then this equation is true
         return y_pred - y_target
     else:
-        return -np.sum(y_target* np.log(y_pred),axis = 1,keepdims=True)
+       return log_loss(y_target, y_pred)
 
 
 def main():
