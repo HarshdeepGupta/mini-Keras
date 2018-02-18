@@ -33,7 +33,7 @@ class Sequential:
 
 
 
-    def predict(self, x, return_activations = False):
+    def predict(self, x, is_training = False):
         '''
         Calculates the output of the model for the input x
         If return_activations is set to true, then returns a python list of activations of all layers 
@@ -45,8 +45,15 @@ class Sequential:
             curr_layer_activation = activation(  np.dot(layer_activations[layer], self.weight_matrices[layer] ) +
                                     self.biases[layer] ,
                                     self.non_lins[layer+1]) 
+            if self.layer_type == 'dropout' and is_training == True: # do dropout only during training
+                mask = np.random.binomial([np.ones((1,curr_layer_activation.shape[1]))],
+                                        self.layer_dropout_keep_prob)[0]
+                mask = np.asfarray(mask)
+                mask *= (1.0/(self.layer_dropout_keep_prob))
+                # print('mask = {}'.format(mask))
+                curr_layer_activation *= mask
             layer_activations.append(curr_layer_activation)
-        if return_activations:
+        if is_training:
             return layer_activations
         else :
             return layer_activations[-1] 
@@ -96,7 +103,7 @@ class Sequential:
         batch_size = x.shape[0]
         for _ in range(iterations):
             # Forward propagation : non_lin( matrix multiplication + biases)
-            layer_activations = self.predict(x, return_activations = True)
+            layer_activations = self.predict(x, is_training = True)
             # Backward propagation : calculate the errors and gradients
             deltas = self.backward_pass(layer_activations,targets)
             # Calculate the weight and bias updates
