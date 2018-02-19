@@ -5,5 +5,5 @@ class Layer:
     def __init__(self, size = 10, activation = 'linear', type = 'dense', dropout_keep_prob = 1):
         self.size = size
         self.activation = activation
-        self.layer_type = type
+        self.type = type
         self.dropout_keep_prob = dropout_keep_prob

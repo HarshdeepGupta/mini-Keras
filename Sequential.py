@@ -4,6 +4,8 @@ import losses
 from Layer import Layer
 from metrics import accuracy
 
+from numpy import linalg
+
 class Sequential:
 
     def __init__(self):
@@ -17,6 +19,18 @@ class Sequential:
         self.weight_matrices = []
         self.biases = []
         self.non_lins = []
+        self.layer_type= []
+        self.dropout_keep_prob = []
+        # monitor gradient norms
+        self.norms = []
+
+    def init_weights(self, size_of_prev_layer,size_of_curr_layer, scheme = 'uniform'):
+        if scheme == 'uniform':
+            return 2*np.random.rand(size_of_prev_layer,size_of_curr_layer)-1
+        if scheme == 'xavier':
+            # TODO
+            return np.random.randn(size_of_prev_layer, size_of_curr_layer).astype(np.float32) * np.sqrt(2.0/(size_of_prev_layer))
+
 
     def add(self, layer):
         '''
@@ -24,10 +38,12 @@ class Sequential:
         '''
         self.layer_sizes.append(layer.size)
         self.non_lins.append(layer.activation)
+        self.layer_type.append(layer.type)
+        self.dropout_keep_prob.append(layer.dropout_keep_prob)
         if len(self.layer_sizes) > 1:            
             size_of_prev_layer = self.layer_sizes[-2]
             size_of_curr_layer = self.layer_sizes[-1]
-            self.weight_matrices.append(2*np.random.rand(size_of_prev_layer,size_of_curr_layer)-1)
+            self.weight_matrices.append(self.init_weights( size_of_prev_layer,size_of_curr_layer, scheme = 'xavier'))
             self.biases.append(0.01*np.ones([1,size_of_curr_layer]))
             
 
@@ -45,13 +61,13 @@ class Sequential:
             curr_layer_activation = activation(  np.dot(layer_activations[layer], self.weight_matrices[layer] ) +
                                     self.biases[layer] ,
                                     self.non_lins[layer+1]) 
-            if self.layer_type == 'dropout' and is_training == True: # do dropout only during training
+            if self.layer_type[layer+1] == 'dropout' and is_training == True: # do dropout only during training
                 mask = np.random.binomial([np.ones((1,curr_layer_activation.shape[1]))],
-                                        self.layer_dropout_keep_prob)[0]
+                                        self.dropout_keep_prob[layer+1])[0]
                 mask = np.asfarray(mask)
-                mask *= (1.0/(self.layer_dropout_keep_prob))
+                mask *= 1.0/(self.dropout_keep_prob[layer+1])
                 # print('mask = {}'.format(mask))
-                curr_layer_activation *= mask
+                curr_layer_activation = curr_layer_activation * mask
             layer_activations.append(curr_layer_activation)
         if is_training:
             return layer_activations
@@ -82,6 +98,8 @@ class Sequential:
             # divide the updates by batch size 
             weight_updates.append(np.dot(layer_activations[layer-1].T, deltas[layer])/batch_size)
             bias_updates.append(np.sum(deltas[layer], axis=0,keepdims=True)/batch_size)
+        # monitor gradient norms
+        self.norms.append(linalg.norm(weight_updates[1]))
         return weight_updates, bias_updates
 
 
@@ -139,10 +157,10 @@ class Sequential:
 def main():
     model = Sequential()
     model.add(Layer(size = 2))
-    model.add(Layer(size = 6,activation = 'sigmoid'))
+    model.add(Layer(size = 6,activation = 'sigmoid', type = 'dropout', dropout_keep_prob = 1))
     model.add(Layer(size = 2,activation = 'softmax'))
     model.compile(learning_rate = 1)
-
+    
     X =  np.array([[1,0],[0,1],[0,0],[1,1]])
     Y =  np.array([[1,0],[1,0],[0,1],[0,1]])
 
